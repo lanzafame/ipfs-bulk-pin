@@ -58,7 +58,7 @@ func get(ctx context.Context, goroutines int, cids [][]byte) error {
 	g, ctx := errgroup.WithContext(ctx)
 	g.SetLimit(goroutines)
 
-	errf, err := os.Create("cid.failed")
+	errf, err := os.OpenFile("cid.failed", os.O_APPEND|os.O_CREATE, 0755)
 	if err != nil {
 		return fmt.Errorf("failed to create failed file: %w", err)
 	}
