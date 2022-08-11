@@ -13,7 +13,13 @@ import (
 )
 
 func main() {
-	f, err := os.OpenFile(os.Args[1], os.O_RDWR, 0755)
+	goroutines, err := strconv.Atoi(os.Args[1])
+	if err != nil {
+		fmt.Println("goroutines value couldn't be parsed")
+		return
+	}
+
+	f, err := os.OpenFile(os.Args[2], os.O_RDWR, 0755)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -21,12 +27,12 @@ func main() {
 
 	defer f.Close()
 
-	start, err := strconv.Atoi(os.Args[2])
+	start, err := strconv.Atoi(os.Args[3])
 	if err != nil {
 		fmt.Println("start value couldn't be parsed")
 		return
 	}
-	end, err := strconv.Atoi(os.Args[3])
+	end, err := strconv.Atoi(os.Args[4])
 	if err != nil {
 		fmt.Println("end value couldn't be parsed")
 		return
@@ -42,15 +48,15 @@ func main() {
 	fmt.Printf("read %v bytes; read %v lines\n", n, n/47)
 
 	cids := bytes.Split(section, []byte("\n"))
-	if err = get(context.Background(), cids); err != nil {
+	if err = get(context.Background(), goroutines, cids); err != nil {
 		fmt.Println(err)
 		return
 	}
 }
 
-func get(ctx context.Context, cids [][]byte) error {
+func get(ctx context.Context, goroutines int, cids [][]byte) error {
 	g, ctx := errgroup.WithContext(ctx)
-	g.SetLimit(100)
+	g.SetLimit(goroutines)
 
 	errf, err := os.Create("cid.failed")
 	if err != nil {
