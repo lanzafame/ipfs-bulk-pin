@@ -64,6 +64,9 @@ func get(ctx context.Context, goroutines int, cids [][]byte) error {
 	}
 
 	for i := range cids {
+		if i%500 == 0 {
+			fmt.Println("up to cid ", i)
+		}
 		if len(cids[i]) == 0 {
 			continue
 		}
