@@ -6,19 +6,42 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 
 	"golang.org/x/sync/errgroup"
 )
 
 func main() {
-	f, err := os.ReadFile(os.Args[1])
+	f, err := os.OpenFile(os.Args[1], os.O_RDWR, 0755)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	cids := bytes.Split(f, []byte("\n"))
+	defer f.Close()
+
+	start, err := strconv.Atoi(os.Args[2])
+	if err != nil {
+		fmt.Println("start value couldn't be parsed")
+		return
+	}
+	end, err := strconv.Atoi(os.Args[3])
+	if err != nil {
+		fmt.Println("end value couldn't be parsed")
+		return
+	}
+
+	seclen := (end - start) * 47
+	section := make([]byte, seclen)
+	n, err := f.ReadAt(section, int64(start*47))
+	if err != nil {
+		fmt.Println("failed to readat: %v", err)
+		return
+	}
+	fmt.Printf("read %v bytes; read %v lines\n", n, n/47)
+
+	cids := bytes.Split(section, []byte("\n"))
 	if err = get(context.Background(), cids); err != nil {
 		fmt.Println(err)
 		return
