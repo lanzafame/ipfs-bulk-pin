@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
-	"time"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -58,7 +57,7 @@ func get(ctx context.Context, goroutines int, cids [][]byte) error {
 	g, ctx := errgroup.WithContext(ctx)
 	g.SetLimit(goroutines)
 
-	errf, err := os.OpenFile("cid.failed", os.O_APPEND|os.O_CREATE, 0755)
+	errf, err := os.OpenFile("cid.failed", os.O_APPEND, 0755)
 	if err != nil {
 		return fmt.Errorf("failed to create failed file: %w", err)
 	}
@@ -73,10 +72,7 @@ func get(ctx context.Context, goroutines int, cids [][]byte) error {
 		cid := string(cids[i])
 		g.Go(func() error {
 			cid := cid
-			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-			defer cancel()
-
-			if err := exec.CommandContext(ctx, "ipfs", "pin", "add", cid).Run(); err != nil {
+			if err := exec.CommandContext(ctx, "timeout", "5", "ipfs", "pin", "add", cid).Run(); err != nil {
 				if _, err = errf.Write([]byte(fmt.Sprintln(cid))); err != nil {
 					return err
 				}
