@@ -67,12 +67,10 @@ func get(ctx context.Context, cids [][]byte) error {
 			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 			defer cancel()
 
-			if out, err := exec.CommandContext(ctx, "ipfs", "pin", "add", cid).CombinedOutput(); err != nil {
-				errf.Write([]byte(fmt.Sprintln(cid)))
-				if exiterr, ok := err.(*exec.ExitError); ok {
-					return fmt.Errorf("ipfs pin add error: %w; out: %s; cid: %s", exiterr.Stderr, out, cid)
+			if err := exec.CommandContext(ctx, "ipfs", "pin", "add", cid).Run(); err != nil {
+				if _, err = errf.Write([]byte(fmt.Sprintln(cid))); err != nil {
+					return err
 				}
-				return fmt.Errorf("ipfs pin add error: %w", err)
 			}
 			return nil
 		})
